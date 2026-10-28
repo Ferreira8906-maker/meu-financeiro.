@@ -1,1 +1,152 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123c2c">
+<title>Meu Financeiro</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1712;color:#f2f7f3;font-family:Arial,sans-serif;padding:20px}
+header{padding:18px 0}
+h1{font-size:27px;margin:0 0 8px}
+p{color:#b6c9bd}
+.card{background:#15271e;border:1px solid #2d4838;border-radius:18px;padding:18px;margin:14px 0}
+label{display:block;margin:14px 0 7px;color:#c7d8cd}
+input{width:100%;padding:13px;border-radius:10px;border:1px solid #486452;background:#0b1712;color:white;font-size:16px}
+button{background:#4ade80;color:#092014;border:0;border-radius:11px;padding:13px;font-weight:bold;font-size:15px;width:100%;margin-top:12px}
+.number{font-size:28px;font-weight:bold;color:#4ade80}
+.muted{color:#b6c9bd;font-size:14px}
+.bar{height:10px;background:#304638;border-radius:8px;overflow:hidden;margin-top:12px}
+.fill{height:100%;background:#4ade80;width:0}
+small{color:#b6c9bd;font-size:14px}
+</style>
+</head>
+<body>
+<header>
+<p>SEU CONTROLE FINANCEIRO</p>
+<h1>Meu Financeiro 💚</h1>
+<p>Organize hoje, conquiste amanhã.</p>
+</header>
+
+<div class="card">
+<p>Minha reserva atual</p>
+<div class="number" id="saldo">R$ 776,54</div>
+<p class="muted">Meta da reserva: <span id="metaTexto">R$ 10.000,00</span></p>
+<div class="bar"><div class="fill" id="barra"></div></div>
+<p class="muted" id="progresso"></p>
+</div>
+
+<div class="card">
+<h2>💰 Atualizar minha reserva</h2>
+<label for="valor">Quanto deseja adicionar ou retirar? (R$)</label>
+<input id="valor" type="number" min="0.01" step="0.01" placeholder="Ex.: 50,00">
+<button onclick="movimentar(1)">Adicionar dinheiro</button>
+<button onclick="movimentar(-1)" style="background:#e6b7a8">Retirar dinheiro</button>
+</div>
+
+<div class="card">
+<h2>🎯 Minhas metas</h2>
+<label for="meta">Meta total da reserva (R$)</label>
+<input id="meta" type="number" min="1" step="0.01" value="10000">
+<button onclick="salvarMeta()">Salvar meta</button>
+<label for="semanal">Meta de economia semanal (R$)</label>
+<input id="semanal" type="number" min="0" step="0.01" value="500">
+<button onclick="salvarSemanal()">Salvar meta semanal</button>
+<p class="muted" id="semTexto">Meta semanal: R$ 500,00</p>
+</div>
+
+<div class="card">
+<h2>📊 Meu progresso</h2>
+<p id="falta"></p>
+<p id="semanas"></p>
+<small>Seus dados ficam salvos neste navegador. Evite apagar os dados do site se quiser mantê-los.</small>
+</div>
+
+<script>
+const inicial={saldo:776.54,meta:10000,semanal:500};
+
+function ler(k,d){
+  try{
+    let v=localStorage.getItem(k);
+    return v===null?d:Number(v);
+  }catch(e){
+    return d;
+  }
+}
+
+function dinheiro(n){
+  return n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+}
+
+function atualizar(){
+  let s=ler('mf_saldo',inicial.saldo);
+  let m=ler('mf_meta',inicial.meta);
+  let w=ler('mf_semanal',inicial.semanal);
+
+  document.getElementById('saldo').textContent=dinheiro(s);
+  document.getElementById('metaTexto').textContent=dinheiro(m);
+  document.getElementById('meta').value=m;
+  document.getElementById('semanal').value=w;
+  document.getElementById('semTexto').textContent='Meta semanal: '+dinheiro(w);
+
+  let p=Math.min(100,Math.max(0,s/m*100));
+  document.getElementById('barra').style.width=p+'%';
+  document.getElementById('progresso').textContent=p.toFixed(1)+'% da meta alcançada';
+  document.getElementById('falta').textContent='Faltam '+dinheiro(Math.max(0,m-s))+' para sua meta.';
+
+  document.getElementById('semanas').textContent=w>0
+    ?'No ritmo da meta semanal, você precisa de cerca de '+Math.ceil(Math.max(0,m-s)/w)+' semanas.'
+    :'Defina uma meta semanal para estimar o prazo.';
+}
+
+function movimentar(f){
+  let e=document.getElementById('valor');
+  let v=Number(e.value);
+
+  if(!Number.isFinite(v)||v<=0){
+    alert('Digite um valor maior que zero.');
+    return;
+  }
+
+  let s=ler('mf_saldo',inicial.saldo)+v*f;
+
+  if(s<0){
+    alert('Sua reserva não pode ficar negativa.');
+    return;
+  }
+
+  localStorage.setItem('mf_saldo',s.toFixed(2));
+  e.value='';
+  atualizar();
+}
+
+function salvarMeta(){
+  let v=Number(document.getElementById('meta').value);
+
+  if(!Number.isFinite(v)||v<=0){
+    alert('Digite uma meta válida.');
+    return;
+  }
+
+  localStorage.setItem('mf_meta',v);
+  atualizar();
+}
+
+function salvarSemanal(){
+  let v=Number(document.getElementById('semanal').value);
+
+  if(!Number.isFinite(v)||v<0){
+    alert('Digite um valor válido.');
+    return;
+  }
+
+  localStorage.setItem('mf_semanal',v);
+  atualizar();
+}
+
+atualizar();
+</script>
+</body>
+</html>
